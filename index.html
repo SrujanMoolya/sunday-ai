@@ -4,20 +4,900 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AI Research Assistant</title>
-    <link rel="stylesheet" href="styles.css" />
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #0f172a;
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Navbar Styling */
+        .navbar {
+            background: linear-gradient(90deg, #1e1b4b, #2e1065);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #fff;
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo-icon {
+            margin-right: 0.5rem;
+            font-size: 1.8rem;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+        
+        .nav-links a {
+            color: #e2e8f0;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+            padding: 0.5rem 0;
+        }
+        
+        .nav-links a:hover {
+            color: #818cf8;
+        }
+        
+        .premium-badge {
+            background: linear-gradient(45deg, #f59e0b, #ef4444);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-left: 0.5rem;
+        }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            background: radial-gradient(circle at top right, #1e1b4b22, transparent 70%),
+                       radial-gradient(circle at bottom left, #4f46e522, transparent 70%);
+        }
+        
+        /* Chat Container */
+        .chat-container {
+            width: 90%;
+            max-width: 1100px;
+            height: 75vh;
+            background-color: rgba(30, 41, 59, 0.8);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4),
+                        0 0 0 1px rgba(255, 255, 255, 0.1),
+                        inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            transform-style: preserve-3d;
+            transform: perspective(1000px) rotateX(2deg);
+        }
+        
+        .chat-container::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #4f46e5, #7c3aed, #2563eb);
+            z-index: -1;
+            border-radius: 18px;
+            filter: blur(8px);
+            opacity: 0.3;
+        }
+        
+        /* Chat Sidebar */
+        .chat-layout {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        .chat-sidebar {
+            width: 260px;
+            background-color: rgba(15, 23, 42, 0.7);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .sidebar-header {
+            padding: 1rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 1rem;
+        }
+        
+        .new-chat-btn {
+            background: linear-gradient(90deg, #4f46e5, #6366f1);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .new-chat-btn:hover {
+            background: linear-gradient(90deg, #4338ca, #4f46e5);
+            transform: translateY(-1px);
+        }
+        
+        .chat-history {
+            flex: 1;
+            overflow-y: auto;
+            margin-top: 1rem;
+        }
+        
+        .history-item {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+        }
+        
+        .history-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .history-item.active {
+            background-color: rgba(79, 70, 229, 0.2);
+            border-left: 3px solid #4f46e5;
+        }
+        
+        .history-icon {
+            margin-right: 0.75rem;
+            opacity: 0.7;
+        }
+        
+        /* Chat Header */
+        .chat-header {
+            background: linear-gradient(90deg, #1e293b, #0f172a);
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .model-selector {
+            display: flex;
+            align-items: center;
+            background-color: rgba(15, 23, 42,.9);
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+        }
+        
+        .model-selector:hover {
+            background-color: rgba(30, 41, 59, 0.9);
+        }
+        
+        .model-indicator {
+            width: 10px;
+            height: 10px;
+            background-color: #10b981;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .header-btn {
+            background-color: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 8px;
+            padding: 0.5rem;
+            color: #e2e8f0;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .header-btn:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Chat Main */
+        .chat-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        /* Chat Box */
+        .chat-box {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            background-color: rgba(15, 23, 42, 0.6);
+        }
+        
+        /* Message Bubbles */
+        .message {
+            display: flex;
+            gap: 1rem;
+            max-width: 90%;
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .user-avatar {
+            background: linear-gradient(45deg, #4f46e5, #2563eb);
+        }
+        
+        .ai-avatar {
+            background: linear-gradient(45deg, #0ea5e9, #0284c7);
+        }
+        
+        .message-content {
+            padding: 1rem 1.25rem;
+            border-radius: 12px;
+            line-height: 1.6;
+        }
+        
+        .user-message .message-content {
+            background-color: rgba(79, 70, 229, 0.2);
+            border: 1px solid rgba(79, 70, 229, 0.3);
+            color: #e5e7eb;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .ai-message .message-content {
+            background-color: rgba(14, 165, 233, 0.1);
+            border: 1px solid rgba(14, 165, 233, 0.2);
+            color: #f3f4f6;
+            border-bottom-left-radius: 4px;
+        }
+        
+        .ai-message {
+            align-self: flex-start;
+        }
+        
+        .user-message {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+        
+        .error-message .message-content {
+            background-color: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        
+        /* Loading */
+        .loading {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #94a3b8;
+            font-style: italic;
+            align-self: center;
+            padding: 0.5rem 1rem;
+            background-color: rgba(15, 23, 42, 0.5);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .loading-dots {
+            display: flex;
+            gap: 4px;
+        }
+        
+        .loading-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #94a3b8;
+            animation: bounce 1.4s infinite ease-in-out;
+        }
+        
+        .loading-dot:nth-child(1) { animation-delay: 0s; }
+        .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+        .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); opacity: 0.5; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+        
+        /* Chat Input */
+        .chat-input {
+            display: flex;
+            padding: 1.25rem;
+            background-color: rgba(15, 23, 42, 0.8);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+        
+        .input-container {
+            flex: 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        
+        .chat-input input {
+            width: 100%;
+            padding: 1rem 3.5rem 1rem 1.25rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: rgba(30, 41, 59, 0.8);
+            color: #ffffff;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .chat-input input:focus {
+            outline: none;
+            border-color: rgba(79, 70, 229, 0.5);
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.25);
+        }
+        
+        .chat-input button {
+            position: absolute;
+            right: 0.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: linear-gradient(90deg, #4f46e5, #6366f1);
+            color: #ffffff;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .chat-input button:hover {
+            transform: translateY(-50%) scale(1.05);
+            background: linear-gradient(90deg, #4338ca, #4f46e5);
+        }
+        
+        .chat-input button:disabled {
+            background: #64748b;
+            cursor: not-allowed;
+        }
+        
+        .input-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-right: 1rem;
+        }
+        
+        .input-action-btn {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+        }
+        
+        .input-action-btn:hover {
+            color: #e2e8f0;
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        
+        /* Footer */
+        .footer {
+            background-color: rgba(15, 23, 42, 0.9);
+            padding: 1.5rem 2rem;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .footer-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+        
+        .footer-links a {
+            color: #94a3b8;
+            text-decoration: none;
+            transition: color 0.2s;
+            font-size: 0.875rem;
+        }
+        
+        .footer-links a:hover {
+            color: #e2e8f0;
+        }
+        
+        .footer-copyright {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+        
+        /* About Section */
+        .about-section {
+            background: linear-gradient(135deg, #1e1b4b, #1e293b);
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+        
+        .about-content {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .about-heading {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(90deg, #4f46e5, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .about-description {
+            color: #e2e8f0;
+            font-size: 1.125rem;
+            line-height: 1.7;
+            margin-bottom: 2rem;
+        }
+        
+        .features {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+        
+        .feature-card {
+            background-color: rgba(30, 41, 59, 0.8);
+            border-radius: 16px;
+            padding: 2rem;
+            width: 280px;
+            text-align: center;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+                        0 0 0 1px rgba(255, 255, 255, 0.05);
+            transform: translateY(0);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2),
+                        0 0 0 1px rgba(255, 255, 255, 0.1);
+        }
+        
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #818cf8;
+        }
+        
+        .feature-title {
+            color: #f1f5f9;
+            font-size: 1.25rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .feature-description {
+            color: #94a3b8;
+            font-size: 0.875rem;
+            line-height: 1.6;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .chat-container {
+                width: 95%;
+                height: 80vh;
+                transform: perspective(1000px) rotateX(1deg);
+            }
+            
+            .chat-sidebar {
+                width: 220px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .chat-layout {
+                flex-direction: column;
+            }
+            
+            .chat-sidebar {
+                width: 100%;
+                height: auto;
+                max-height: 30%;
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            
+            .chat-main {
+                height: 70%;
+            }
+            
+            .features {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .feature-card {
+                width: 100%;
+                max-width: 340px;
+            }
+            
+            .footer-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+        
+        @media (max-width: 640px) {
+            .navbar {
+                padding: 0.75rem 1rem;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+            
+            .chat-container {
+                width: 100%;
+                height: 85vh;
+                transform: none;
+            }
+            
+            .message {
+                max-width: 100%;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="chat-container">
-        <div class="chat-header">
-            <h2>AI Research Assistant</h2>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo">
+            <span class="logo-icon">🧠</span>
+            ResearchAI
         </div>
-        <div class="chat-box" id="chatBox"></div>
-        <div class="chat-input">
-            <input type="text" id="userInput" placeholder="Type your question..." />
-            <button id="sendButton">Send</button>
+        <div class="nav-links">
+            <a href="#">Home</a>
+            <a href="#">Features</a>
+            <a href="#">Pricing</a>
+            <a href="#">About</a>
+            <a href="#">Try Premium <span class="premium-badge">PRO</span></a>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="chat-container">
+            <div class="chat-layout">
+                <!-- Sidebar -->
+                <div class="chat-sidebar">
+                    <div class="sidebar-header">
+                        <button class="new-chat-btn">
+                            <span>+</span> New Chat
+                        </button>
+                    </div>
+                    <div class="chat-history">
+                        <div class="history-item active">
+                            <span class="history-icon">📊</span>
+                            <span>Research on AI advancements</span>
+                        </div>
+                        <div class="history-item">
+                            <span class="history-icon">🧬</span>
+                            <span>Biotech innovation trends</span>
+                        </div>
+                        <div class="history-item">
+                            <span class="history-icon">🌍</span>
+                            <span>Climate change solutions</span>
+                        </div>
+                        <div class="history-item">
+                            <span class="history-icon">🔬</span>
+                            <span>Quantum computing basics</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Main Chat Area -->
+                <div class="chat-main">
+                    <!-- Chat Header -->
+                    <div class="chat-header">
+                        <div class="model-selector">
+                            <div class="model-indicator"></div>
+                            <span>ResearchAI Pro</span>
+                        </div>
+                        <div class="header-actions">
+                            <button class="header-btn">⚙️</button>
+                            <button class="header-btn">📁</button>
+                            <button class="header-btn">🔄</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Chat Messages -->
+                    <div class="chat-box" id="chatBox">
+                        <div class="message ai-message">
+                            <div class="avatar ai-avatar">AI</div>
+                            <div class="message-content">
+                                Hello! I'm your AI research assistant. How can I help you with your research today?
+                            </div>
+                        </div>
+                        
+                        <div class="message user-message">
+                            <div class="avatar user-avatar">You</div>
+                            <div class="message-content">
+                                Can you find the latest research on quantum computing applications in healthcare?
+                            </div>
+                        </div>
+                        
+                        <div class="message ai-message">
+                            <div class="avatar ai-avatar">AI</div>
+                            <div class="message-content">
+                                <strong>Topic:</strong> Quantum Computing in Healthcare<br><br>
+                                <strong>Summary:</strong> Recent research shows promising applications of quantum computing in drug discovery, genomics analysis, and medical imaging. Quantum algorithms can significantly accelerate protein folding simulations and optimize radiation therapy planning.<br><br>
+                                <strong>Sources:</strong> Nature Quantum Science, IBM Research Journal, Harvard Medical Review<br><br>
+                                <strong>Tools Used:</strong> Semantic Scholar, PubMed Database, Quantum Literature Analysis
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Chat Input -->
+                    <div class="chat-input">
+                        <div class="input-actions">
+                            <button class="input-action-btn">🎤</button>
+                            <button class="input-action-btn">📎</button>
+                        </div>
+                        <div class="input-container">
+                            <input type="text" id="userInput" placeholder="Ask about any research topic..." />
+                            <button id="sendButton">➤</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-
-    <script src="script.js"></script>
+    
+    <!-- About Section -->
+    <section class="about-section">
+        <div class="about-content">
+            <h2 class="about-heading">Advanced AI Research Assistant</h2>
+            <p class="about-description">
+                Our AI-powered research assistant helps you find, analyze, and summarize scientific information from across the web. Get comprehensive insights backed by credible sources in seconds.
+            </p>
+            
+            <div class="features">
+                <div class="feature-card">
+                    <div class="feature-icon">🔍</div>
+                    <h3 class="feature-title">Deep Research</h3>
+                    <p class="feature-description">
+                        Access millions of academic papers, journals, and publications with advanced semantic search capabilities.
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3 class="feature-title">Data Analysis</h3>
+                    <p class="feature-description">
+                        Automatically analyze trends, statistics, and visualize research data to gain deeper insights.
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">📝</div>
+                    <h3 class="feature-title">Smart Summaries</h3>
+                    <p class="feature-description">
+                        Get concise, accurate summaries of complex research topics with relevant citations and sources.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+                <a href="#">Contact Us</a>
+                <a href="#">FAQ</a>
+            </div>
+            <div class="footer-copyright">
+                © 2025 ResearchAI. All rights reserved.
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+    const userInput = document.getElementById('userInput');
+    const sendButton = document.getElementById('sendButton');
+    const chatBox = document.getElementById('chatBox');
+    const BACKEND_URL = 'https://sunday-ai.onrender.com/query/';
+    
+    // Function to create a chat message
+    function addMessage(text, type) {
+        const message = document.createElement('div');
+        message.classList.add('message');
+        
+        const avatar = document.createElement('div');
+        avatar.classList.add('avatar');
+        
+        const messageContent = document.createElement('div');
+        messageContent.classList.add('message-content');
+        messageContent.innerHTML = text;
+        
+        if (type === 'user') {
+            message.classList.add('user-message');
+            avatar.classList.add('user-avatar');
+            avatar.textContent = 'You';
+        } else if (type === 'ai') {
+            message.classList.add('ai-message');
+            avatar.classList.add('ai-avatar');
+            avatar.textContent = 'AI';
+        } else if (type === 'error') {
+            message.classList.add('error-message');
+            avatar.classList.add('ai-avatar');
+            avatar.textContent = '!';
+        }
+        
+        message.appendChild(avatar);
+        message.appendChild(messageContent);
+        chatBox.appendChild(message);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+    
+    // Function to show loading state
+    function showLoading() {
+        const loading = document.createElement('div');
+        loading.classList.add('loading');
+        loading.id = 'loading';
+        
+        const text = document.createElement('span');
+        text.textContent = 'Thinking';
+        
+        const dots = document.createElement('div');
+        dots.classList.add('loading-dots');
+        
+        for (let i = 0; i < 3; i++) {
+            const dot = document.createElement('div');
+            dot.classList.add('loading-dot');
+            dots.appendChild(dot);
+        }
+        
+        loading.appendChild(text);
+        loading.appendChild(dots);
+        chatBox.appendChild(loading);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+    
+    // Function to remove loading state
+    function hideLoading() {
+        const loading = document.getElementById('loading');
+        if (loading) {
+            chatBox.removeChild(loading);
+        }
+    }
+    
+    // Function to handle sending a message
+    async function sendMessage() {
+        const query = userInput.value.trim();
+        if (!query) return;
+        
+        addMessage(query, 'user');
+        userInput.value = '';
+        sendButton.disabled = true;
+        showLoading();
+        
+        try {
+            const response = await fetch(BACKEND_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query }),
+            });
+            
+            hideLoading();
+            
+            if (response.ok) {
+                const data = await response.json();
+                const responseText = `<strong>Topic:</strong> ${data.topic}<br><br>
+                                    <strong>Summary:</strong> ${data.summary}<br><br>
+                                    <strong>Sources:</strong> ${data.sources.join(', ')}<br><br>
+                                    <strong>Tools Used:</strong> ${data.tools_used.join(', ')}`;
+                addMessage(responseText, 'ai');
+            } else {
+                const error = await response.json();
+                addMessage(`Error: ${error.detail}`, 'error');
+            }
+        } catch (error) {
+            hideLoading();
+            addMessage(`Error: ${error.message}`, 'error');
+        }
+        
+        sendButton.disabled = false;
+    }
+    
+    // Event Listeners
+    sendButton.addEventListener('click', sendMessage);
+    userInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+    </script>
 </body>
 </html>
