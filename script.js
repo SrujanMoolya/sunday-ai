@@ -2,7 +2,7 @@ const userInput = document.getElementById('userInput');
 const sendButton = document.getElementById('sendButton');
 const chatBox = document.getElementById('chatBox');
 
-const BACKEND_URL = 'https://your-backend-url.onrender.com/query/'; // Update this
+const BACKEND_URL = 'https://sunday-ai.onrender.com/query/'; // Update this
 
 // Function to create a chat message
 function addMessage(text, type) {
